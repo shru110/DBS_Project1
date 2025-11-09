@@ -214,7 +214,7 @@ def dashboard():
     cursor = conn.cursor(dictionary=True)
 
     try:
- # --- EXECUTION BLOCK FOR TYPE 2 QUERIES (Q6, Q7, Q8, Q9, Q10, Q14) ---
+        # --- EXECUTION BLOCK FOR TYPE 2 QUERIES (Q6, Q7, Q8, Q9, Q10, Q14) ---
         # 1. Q6: User's Owned Projects List
         q6_query = """
             SELECT project_id, title, CASE status WHEN 1 THEN 'Completed' ELSE 'In Progress' END AS status_text
@@ -234,16 +234,17 @@ def dashboard():
 
         # 3. Q8: Total Assets and Storage Used (Metrics)
         q8_query = """
-         SELECT COUNT(a.asset_id) AS total_assets, SUM(a.file_size_KB) AS total_size_KB
-         FROM project p INNER JOIN asset a ON p.project_id = a.project_id WHERE p.owner_user_id = %s;
+            SELECT COUNT(a.asset_id) AS total_assets, SUM(a.file_size_KB) AS total_size_KB
+            FROM project p INNER JOIN asset a ON p.project_id = a.project_id WHERE p.owner_user_id = %s;
         """
         cursor.execute(q8_query, (user_id,))
         dashboard_data['asset_stats'] = cursor.fetchone() 
 
         # 4. Q9: Top 3 Most Used Skills
+        # ERROR FIXED: Changed ps.skill_id to ps.project_id in the JOIN condition
         q9_query = """
             SELECT s.skill_name AS skill, COUNT(ps.project_id) AS projects_used_in
-            FROM project p INNER JOIN project_skill ps ON p.project_id = ps.skill_id
+            FROM project p INNER JOIN project_skill ps ON p.project_id = ps.project_id
             INNER JOIN skill s ON ps.skill_id = s.skill_id
             WHERE p.owner_user_id = %s GROUP BY s.skill_name ORDER BY projects_used_in DESC LIMIT 3;
         """
@@ -262,7 +263,7 @@ def dashboard():
         if avg_rating_result and avg_rating_result['average_rating'] is not None:
             dashboard_data['avg_rating'] = round(avg_rating_result['average_rating'], 2)
         else:
-         dashboard_data['avg_rating'] = 'N/A'
+            dashboard_data['avg_rating'] = 'N/A'
 
         # 6. Q14: Project Count by Industry
         q14_query = """
@@ -350,8 +351,9 @@ def project_detail(project_id):
         project_data['assets'] = cursor.fetchall()
 
         # Q4: Feedback Received for Project (Multi Fetch)
+        # ERROR FIXED: Changed 'coment' to 'comment' (typo in column name)
         q4_query = """
-            SELECT CONCAT(u.first_name, ' ', u.last_name) AS reviewer, f.rating, f.coment, f.date
+            SELECT CONCAT(u.first_name, ' ', u.last_name) AS reviewer, f.rating, f.comment, f.date
             FROM feedback f JOIN user u ON f.user_id = u.user_id
             WHERE f.project_id = %s ORDER BY f.date DESC;
         """
@@ -383,4 +385,9 @@ def project_detail(project_id):
     # 4. Render Template
     return render_template('project_detail.html', project=project_data)
 
-# This code is ready for the frontend integration right?
+
+# ==========================================
+# 7. RUN APPLICATION
+# ==========================================
+if __name__ == '__main__':
+    app.run(debug=True)
