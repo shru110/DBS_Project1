@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %}Projects - Portfolio Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Projects</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Filter Projects</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('projects_list') }}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="industry" class="form-label">Industry</label>
+                    <select class="form-select" id="industry" name="industry">
+                        <option value="">All Industries</option>
+                        {% for industry in industries %}
+                        <option value="{{ industry.industry }}" {% if industry.industry == selected_industry %}selected{% endif %}>
+                            {{ industry.industry }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Projects List -->
+<div class="card">
+    <div class="card-header">
+        <h5>All Projects</h5>
+    </div>
+    <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        {% if projects %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Client</th>
+                        <th>Industry</th>
+                        <th>Start Date</th>
+                        <th>Completion Date</th>
+                        <th>Status</th>
+                        <th>Hours</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td><a href="{{ url_for('project_detail', project_id=project.project_id) }}">{{ project.Project_Title }}</a></td>
+                        <td>{{ project.Client_Name }}</td>
+                        <td>{{ project.industry }}</td>
+                        <td>{{ project.start_date }}</td>
+                        <td>{{ project.completion_date or 'N/A' }}</td>
+                        <td>
+                            {% if project.status == 1 %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">In Progress</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ project.total_hours_spent or 'N/A' }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('project_detail', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">No projects found matching your criteria.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

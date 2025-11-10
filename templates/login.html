@@ -1,14 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Portfolio</title>
+    
+    <!-- Standard CSS Styles -->
+    <style>
+        /* CSS Variables for a clean, customizable theme */
+        :root {
+            --primary-color: #3b82f6; /* Blue-600 equivalent */
+            --primary-hover: #2563eb; /* Blue-700 equivalent */
+            --bg-light: #f3f4f6; /* Gray-100 equivalent */
+            --text-dark: #1f2937; 
+            --text-medium: #4b5563; 
+            --error-bg: #fee2e2; 
+            --error-text: #b91c1c; 
+        }
+        
+        /* Base styles and centering */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* Login Card Container */
+        .login-card {
+            width: 100%;
+            max-width: 448px; 
+            padding: 2rem; 
+            background-color: white;
+            border-radius: 0.75rem; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); 
+            box-sizing: border-box;
+        }
+
+        /* Header Styles */
+        .header h1 {
+            font-size: 1.875rem; 
+            font-weight: 700; 
+            text-align: center;
+            color: var(--text-dark);
+            margin: 0 0 0.5rem 0;
+        }
+        .header p {
+            text-align: center;
+            color: var(--text-medium);
+            margin-bottom: 2rem;
+        }
+
+        /* Form Layout */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Labels */
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500; 
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        /* Inputs */
+        input {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem; 
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+            appearance: none;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color), 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Error Message Box */
+        .error-message {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--error-text);
+            background-color: var(--error-bg);
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--error-text);
+        }
+
+        /* Button */
+        button {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding: 0.6rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.15s, opacity 0.15s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        button:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+        button:disabled {
+            background-color: #93c5fd; 
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* Sign Up Link */
+        .signup-link {
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-medium);
+            margin-top: 1.5rem;
+        }
+        .signup-link a {
+            font-weight: 600;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Please Log In</h1>
-    <form method="POST">
-        <label>Email: <input type="email" name="email"></label><br>
-        <label>Password: <input type="password" name="password"></label><br>
-        <button type="submit">Log In</button>
-    </form>
+
+    <!-- Main Container -->
+    <div class="login-card">
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>Welcome Back</h1>
+            <p>Please log in to access your portfolio.</p>
+        </div>
+
+        {% if error %}
+        <div class="error-message" role="alert">
+            <span class="font-medium">Error:</span> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <!-- Email Input -->
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+            </div>
+
+            <!-- Password Input -->
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••">
+            </div>
+
+            <!-- Submit Button -->
+            <div>
+                <button type="submit">
+                    Log In
+                </button>
+            </div>
+        </form>
+
+        <!-- Sign Up Link -->
+        <p class="signup-link">
+            Don't have an account?
+            <a href="{{ url_for('signup') }}">
+                Sign up
+            </a>
+        </p>
+    </div>
 </body>
 </html>

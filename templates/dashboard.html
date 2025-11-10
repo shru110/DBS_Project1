@@ -1,0 +1,319 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Portfolio Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5>Total Projects</h5>
+                <h3>{{ data.client_summary|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5>Completed Projects</h5>
+                <h3>{{ data.top_projects|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5>Total Clients</h5>
+                <h3>{{ data.client_summary|length }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h5>Total Hours</h5>
+                <h3>{{ data.role_workload|sum(attribute='Total_Hours_Logged_By_Role') }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Data -->
+<div class="row">
+    <!-- Client Project Effort Summary -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Client Project Effort Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Industry</th>
+                                <th>Total Hours</th>
+                                <th>Projects</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for client in data.client_summary %}
+                            <tr>
+                                <td>{{ client.Client }}</td>
+                                <td>{{ client.Industry }}</td>
+                                <td>{{ client.Total_Hours_Across_Projects }}</td>
+                                <td>{{ client.Number_of_Projects }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Portfolio Skill Demand -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Portfolio Skill Demand</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Skill</th>
+                                <th>Projects Used In</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for skill in data.top_skills %}
+                            <tr>
+                                <td>{{ skill.Skill }}</td>
+                                <td>{{ skill.Projects_Used_In }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Asset Stats for In-Progress Projects -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Asset Stats for In-Progress Projects</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Assets</th>
+                                <th>Total Size (KB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asset in data.in_progress_assets %}
+                            <tr>
+                                <td>{{ asset.Project_Title }}</td>
+                                <td>{{ asset.Number_of_Assets }}</td>
+                                <td>{{ asset.Total_Size_KB }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Average Proficiency per Skill -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Average Proficiency per Skill</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Skill</th>
+                                <th>Avg Proficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for skill in data.skill_proficiency %}
+                            <tr>
+                                <td>{{ skill.Skill }}</td>
+                                <td>{{ "%.2f"|format(skill.Average_Proficiency_Rating) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Most Active Reviewer -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Most Active Reviewer</h5>
+            </div>
+            <div class="card-body">
+                {% if data.top_reviewer %}
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ data.top_reviewer.Reviewer }}</h5>
+                        <p class="card-text">Role: {{ data.top_reviewer.Role }}</p>
+                        <p class="card-text">Total Feedback Given: {{ data.top_reviewer.Total_Feedback_Given }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <p>No feedback data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Projects by Effort -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Projects by Effort</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Completion Date</th>
+                                <th>Total Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in data.top_projects %}
+                            <tr>
+                                <td><a href="{{ url_for('project_detail', project_id=project.project_id) }}">{{ project.Project_Title }}</a></td>
+                                <td>{{ project.Client_Name }}</td>
+                                <td>{{ project.completion_date }}</td>
+                                <td>{{ project.Total_Effort_Hours }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Workload by Role -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>User Workload by Role</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Total Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in data.role_workload %}
+                            <tr>
+                                <td>{{ role.Team_Role }}</td>
+                                <td>{{ role.Total_Hours_Logged_By_Role }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Asset File Type Distribution -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Asset File Type Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>File Type</th>
+                                <th>Count</th>
+                                <th>Total Size (KB)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for file in data.file_types %}
+                            <tr>
+                                <td>{{ file.File_Extension }}</td>
+                                <td>{{ file.Count_of_Files }}</td>
+                                <td>{{ file.Total_Size_KB }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Collaborative Projects -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5>Collaborative Projects</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Collaborators</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in data.collaborative_projects %}
+                            <tr>
+                                <td>{{ project.Collaborative_Project }}</td>
+                                <td>{{ project.Number_of_Collaborators }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

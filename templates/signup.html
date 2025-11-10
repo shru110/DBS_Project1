@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Portfolio Management System</title>
+    <style>
+        /* All original custom CSS is preserved here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .auth-page {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .left-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            position: relative;
+        }
+        
+        .overlay {
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .overlay h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .overlay p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .auth-form {
+            width: 100%;
+            max-width: 450px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #6a11cb;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+        }
+        
+        .auth-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-button:active {
+            transform: translateY(0);
+        }
+        
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        
+        .auth-switch a {
+            color: #6a11cb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Modified for Flask Flash Messages */
+        .auth-error {
+            /* Inherited from original auth-error CSS */
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Notifications are unnecessary for this SSR design */
+        .notification { display: none; } 
+        
+        @media (max-width: 768px) {
+            .auth-page {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                display: none;
+            }
+            
+            .left-panel {
+                padding: 10px;
+            }
+            
+            .auth-form {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-page">
+        <div class="left-panel">
+            
+            <!-- FORM START: CONVERTED TO FLASK SUBMISSION -->
+            <form class="auth-form" method="POST" action="{{ url_for('signup') }}">
+                <h2>Create Your Account</h2>
+                
+                <!-- Jinja Error Display -->
+                {% if error %}
+                <div class="auth-error">
+                    <p>{{ error }}</p>
+                </div>
+                {% endif %}
+                <!-- Also check for Flash messages like 'success' from previous redirects -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    {% if category == 'success' or category == 'info' %}
+                    <div class="auth-error" style="background-color: #d4edda; color: #155724; border-color: #c3e6cb;">
+                        <p>{{ message }}</p>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input
+                        id="firstName"
+                        type="text"
+                        name="first_name"  <!-- CHANGED TO PYTHON'S first_name -->
+                        required
+                        value="{{ request.form.first_name or '' }}"
+                    />
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input
+                        id="lastName"
+                        type="text"
+                        name="last_name"   <!-- CHANGED TO PYTHON'S last_name -->
+                        value="{{ request.form.last_name or '' }}"
+                    />
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"       <!-- CHANGED TO PYTHON'S email -->
+                        required
+                        value="{{ request.form.email or '' }}"
+                    />
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Select Your Role</label>
+                    <select
+                        id="role"
+                        name="role"       <!-- CHANGED TO PYTHON'S role -->
+                    >
+                        <!-- Added Jinja to select previous value on error -->
+                        <optgroup label="Makers">
+                            <option value="Frontend Developer" {% if request.form.role == 'Frontend Developer' %}selected{% endif %}>Frontend Developer</option>
+                            <option value="Backend Developer" {% if request.form.role == 'Backend Developer' %}selected{% endif %}>Backend Developer</option>
+                            <option value="UI/UX Designer" {% if request.form.role == 'UI/UX Designer' %}selected{% endif %}>UI/UX Designer</option>
+                            <option value="Graphic Designer" {% if request.form.role == 'Graphic Designer' %}selected{% endif %}>Graphic Designer</option>
+                            <option value="Content Writer" {% if request.form.role == 'Content Writer' %}selected{% endif %}>Content Writer</option>
+                            <option value="Videographer/Animator" {% if request.form.role == 'Videographer/Animator' %}selected{% endif %}>Videographer/Animator</option>
+                        </optgroup>
+                        
+                        <optgroup label="Management">
+                            <option value="Administrator" {% if request.form.role == 'Administrator' %}selected{% endif %}>Administrator</option>
+                            <option value="Project Manager" {% if request.form.role == 'Project Manager' %}selected{% endif %}>Project Manager</option>
+                            <option value="Team Lead" {% if request.form.role == 'Team Lead' %}selected{% endif %}>Team Lead</option>
+                            <option value="Art Director" {% if request.form.role == 'Art Director' %}selected{% endif %}>Art Director</option>
+                            <option value="Product Owner" {% if request.form.role == 'Product Owner' %}selected{% endif %}>Product Owner</option>
+                        </optgroup>
+                        
+                        <optgroup label="Reviewers & Stakeholders">
+                            <option value="Client" {% if request.form.role == 'Client' %}selected{% endif %}>Client</option>
+                            <option value="QA Tester" {% if request.form.role == 'QA Tester' %}selected{% endif %}>QA Tester</option>
+                            <option value="Stakeholder" {% if request.form.role == 'Stakeholder' %}selected{% endif %}>Stakeholder</option>
+                            <option value="Guest" {% if request.form.role == 'Guest' %}selected{% endif %}>Guest</option>
+                            <option value="Intern" {% if request.form.role == 'Intern' %}selected{% endif %}>Intern</option>
+                        </optgroup>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"    <!-- CHANGED TO PYTHON'S password -->
+                        minLength="6"
+                        required
+                    />
+                </div>
+                
+                <button type="submit" class="auth-button">Sign Up</button>
+                
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+                </div>
+            </form>
+            <!-- FORM END -->
+
+        </div>
+        
+        <div class="right-panel">
+            <div class="overlay">
+                <h1>Welcome to the Creative Hub 🚀</h1>
+                <p>Collaborate. Design. Build. Showcase your talent with us.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- The notification div and script are removed as they are incompatible. 
+         Flask handles notifications via server-side rendering. -->
+</body>
+</html>
