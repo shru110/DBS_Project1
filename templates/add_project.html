@@ -1,6 +1,137 @@
-<div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group me-2">
-        <a href="{{ url_for('add_project') }}" class="btn btn-sm btn-primary">+ Add New Project</a>
-        <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+{% extends "layout.html" %}
+
+{% block title %}Add New Project - Portfolio Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Add New Project</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5>Project Details</h5>
+            </div>
+            <div class="card-body">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('add_project') }}" method="POST">
+                    <!-- Project Details -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label">Project Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="1">Completed</option>
+                                <option value="0" selected>In Progress</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="completion_date" class="form-label">Completion Date (if applicable)</label>
+                            <input type="date" class="form-control" id="completion_date" name="completion_date">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="client_id" class="form-label">Client</label>
+                            <select class="form-select" id="client_id" name="client_id" required>
+                                <option value="" disabled selected>Select a client...</option>
+                                {% for client in clients %}
+                                    <option value="{{ client.client_id }}">{{ client.client_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Skills and Tags -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="skills" class="form-label">Skills Used</label>
+                            <select class="form-select" id="skills" name="skills" multiple size="5">
+                                {% for skill in skills %}
+                                    <option value="{{ skill.skill_id }}">{{ skill.skill_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tags" class="form-label">Project Tags</label>
+                            <select class="form-select" id="tags" name="tags" multiple size="5">
+                                {% for tag in tags %}
+                                    <option value="{{ tag.tag_id }}">{{ tag.tag_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+
+                    <!-- Add this section before the closing </form> tag in add_project.html -->
+
+<hr>
+
+<h5>Initial Assets</h5>
+<p class="text-muted">Upload any initial files for this project.</p>
+<div class="mb-3">
+    <label for="asset_file" class="form-label">Choose File(s)</label>
+    <input class="form-control" type="file" id="asset_file" name="asset_files" multiple>
+</div>
+
+<hr>
+
+<h5>Initial Feedback</h5>
+<p class="text-muted">Add any initial notes or feedback.</p>
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label for="feedback_rating" class="form-label">Rating</label>
+        <select class="form-select" id="feedback_rating" name="feedback_rating">
+            <option value="">Select a rating...</option>
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - Average</option>
+            <option value="2">2 - Below Average</option>
+            <option value="1">1 - Poor</option>
+        </select>
+    </div>
+    <div class="col-md-8">
+        <label for="feedback_comment" class="form-label">Comment</label>
+        <textarea class="form-control" id="feedback_comment" name="feedback_comment" rows="2"></textarea>
     </div>
 </div>
+
+<!-- The original submit buttons remain here -->
+<button type="submit" class="btn btn-primary">Create Project</button>
+<a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                <!-- Change this line in add_project.html -->
+<form action="{{ url_for('add_project') }}" method="POST" enctype="multipart/form-data">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

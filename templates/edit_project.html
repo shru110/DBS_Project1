@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Project - {{ project.title }}{% endblock %}
+
+{% block content %}
+<h1 class="h2">Edit Project: {{ project.title }}</h1>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Update Completion Date -->
+<div class="card mb-4">
+    <div class="card-header"><h5>Project Status</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('edit_project', project_id=project.project_id) }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="completion_date" class="form-label">Mark as Completed</label>
+                    <input type="date" class="form-control" name="completion_date" value="{{ project.completion_date }}">
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-warning">Update Completion Date</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add New Assets -->
+<div class="card mb-4">
+    <div class="card-header"><h5>Add New Assets</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('edit_project', project_id=project.project_id) }}" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="asset_file" class="form-label">Choose File(s)</label>
+                <input class="form-control" type="file" name="asset_files" multiple>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload Files</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add New Feedback -->
+<div class="card mb-4">
+    <div class="card-header"><h5>Add New Feedback</h5></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('edit_project', project_id=project.project_id) }}">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="feedback_rating" class="form-label">Rating</label>
+                    <select class="form-select" name="feedback_rating">
+                        <option value="">Select a rating...</option>
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Below Average</option>
+                        <option value="1">1 - Poor</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label for="feedback_comment" class="form-label">Comment</label>
+                    <textarea class="form-control" name="feedback_comment" rows="2"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-2">Submit Feedback</button>
+        </form>
+    </div>
+</div>
+
+<!-- Display Existing Assets -->
+<div class="card mb-4">
+    <div class="card-header"><h5>Current Assets</h5></div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for asset in assets %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ asset.file_name }} ({{ asset.file_type }}, {{ (asset.file_size_KB / 1024)|round(2) }} MB)
+                <small class="text-muted">{{ asset.date_uploaded }}</small>
+            </li>
+            {% else %}
+            <li class="list-group-item">No assets uploaded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Display Existing Feedback -->
+<div class="card">
+    <div class="card-header"><h5>Feedback History</h5></div>
+    <div class="card-body">
+        {% for item in feedback %}
+        <div class="border-bottom pb-3 mb-3">
+            <strong>{{ item.first_name }}</strong> gave a rating of 
+            <span class="badge bg-primary">{{ item.rating }}</span>
+            <p class="mt-2 mb-1">{{ item.coment }}</p>
+            <small class="text-muted">{{ item.date }}</small>
+        </div>
+        {% else %}
+        <p>No feedback submitted yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

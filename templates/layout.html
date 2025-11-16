@@ -251,23 +251,29 @@
             {% if g.user %}
             <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
                 <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{{ url_for('dashboard') }}">
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('projects_list') }}">
-                                Projects
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('analytics') }}">
-                                Analytics
-                            </a>
-                        </li>
-                    </ul>
+                   <ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ url_for('dashboard') }}">
+            Dashboard
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('projects_list') }}">
+            Projects
+        </a>
+    </li>
+    <!-- ADD THIS -->
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('add_project') }}">
+            + Add Project
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('analytics') }}">
+            Analytics
+        </a>
+    </li>
+</ul>
                 </div>
             </nav>
             {% endif %}
