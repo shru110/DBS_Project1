@@ -25,10 +25,14 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'blend',
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Database Credentials
-DB_HOST = 'localhost'
-DB_USER = 'root'
-DB_PASSWORD = 'Shru#110' # This is your password
-DB_NAME = 'portfolio'
+from dotenv import load_dotenv
+load_dotenv()
+
+# Database Credentials (now read from .env)
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD') # No default for password
+DB_NAME = os.getenv('DB_NAME', 'portfolio')
 
 # Initialize libraries
 bcrypt = Bcrypt(app)
