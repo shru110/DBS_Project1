@@ -21,7 +21,8 @@
         <div class="card stats-card">
             <div class="card-body">
                 <h5>Total Projects</h5>
-                <h3>{{ data.client_summary|length }}</h3>
+                <!-- CORRECTED: Now uses the correct count from the database -->
+                <h3>{{ data.total_projects_count }}</h3>
             </div>
         </div>
     </div>
@@ -29,7 +30,8 @@
         <div class="card stats-card">
             <div class="card-body">
                 <h5>Completed Projects</h5>
-                <h3>{{ data.top_projects|length }}</h3>
+                <!-- CORRECTED: Now uses the correct count from the database -->
+                <h3>{{ data.completed_projects_count }}</h3>
             </div>
         </div>
     </div>
@@ -37,6 +39,7 @@
         <div class="card stats-card">
             <div class="card-body">
                 <h5>Total Clients</h5>
+                <!-- This one is correct, as it counts clients -->
                 <h3>{{ data.client_summary|length }}</h3>
             </div>
         </div>
@@ -45,6 +48,7 @@
         <div class="card stats-card">
             <div class="card-body">
                 <h5>Total Hours</h5>
+                <!-- This one is also correct -->
                 <h3>{{ data.role_workload|sum(attribute='Total_Hours_Logged_By_Role') }}</h3>
             </div>
         </div>
@@ -165,7 +169,14 @@
                             {% for skill in data.skill_proficiency %}
                             <tr>
                                 <td>{{ skill.Skill }}</td>
-                                <td>{{ "%.2f"|format(skill.Average_Proficiency_Rating) }}</td>
+                                <!-- CORRECTED AND CLEANED UP: Properly handles None values -->
+                                <td>
+                                    {% if skill.Average_Proficiency_Rating is not none %}
+                                        {{ "%.2f"|format(skill.Average_Proficiency_Rating) }}
+                                    {% else %}
+                                        0.00
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

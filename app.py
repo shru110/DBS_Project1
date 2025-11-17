@@ -201,12 +201,17 @@ def add_project():
     if request.method == 'POST':
         title = request.form['title']
         description = request.form['description']
-        status = request.form['status']
+        status_from_form = request.form['status']
         start_date = request.form['start_date']
         completion_date = request.form.get('completion_date') or None
         client_id = request.form['client_id']
         
-        # CORRECTED: Use dictionary access for g.user
+        # FIX: If a completion date is provided, force status to 'Completed' (1)
+        if completion_date:
+            status = 1
+        else:
+            status = status_from_form
+
         user_id = g.user['user_id'] 
         selected_skills = request.form.getlist('skills')
         selected_tags = request.form.getlist('tags')
@@ -262,13 +267,21 @@ def add_project():
         except mysql.connector.Error as err:
             conn.rollback()
             flash(f'Error adding project: {err}', 'danger')
-            return redirect(url_for('add_project'))
+            # On error, fall through to re-render the form
         
         finally:
             cursor.close()
             conn.close()
 
     # --- THIS IS THE GET REQUEST PART ---
+    # This part runs for a GET request, or if a POST request fails
+    # We need a new connection if the POST block closed it
+    if 'conn' not in locals() or not conn.is_connected():
+        conn = get_db_connection()
+        if conn is None:
+            flash("Database connection failed.", "danger")
+            return redirect(url_for('dashboard'))
+            
     cursor = conn.cursor(dictionary=True)
     
     try:
@@ -289,8 +302,11 @@ def add_project():
         return redirect(url_for('dashboard'))
     
     finally:
-        cursor.close()
-        conn.close()
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
+
 
 @app.route('/project/<int:project_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -302,14 +318,18 @@ def edit_project(project_id):
     
     cursor = conn.cursor(dictionary=True)
 
-    # CORRECTED: Use dictionary access for g.user
+    # Initial checks
     cursor.execute("SELECT project_id FROM project_user WHERE project_id = %s AND user_id = %s", (project_id, g.user['user_id']))
     if cursor.fetchone() is None:
+        cursor.close()
+        conn.close()
         abort(403)
 
     cursor.execute("SELECT * FROM project WHERE project_id = %s", (project_id,))
     project = cursor.fetchone()
     if not project:
+        cursor.close()
+        conn.close()
         flash("Project not found.", "danger")
         return redirect(url_for('projects_list'))
 
@@ -337,36 +357,63 @@ def edit_project(project_id):
                     INSERT INTO feedback (project_id, user_id, rating, coment, date)
                     VALUES (%s, %s, %s, %s, CURDATE())
                 """
-                # CORRECTED: Use dictionary access for g.user
                 cursor.execute(feedback_query, (project_id, g.user['user_id'], feedback_rating, feedback_comment))
             
+            # FIX: Update completion date and status together
             new_completion_date = request.form.get('completion_date')
+            date_to_update = new_completion_date if new_completion_date else None
+            
             if new_completion_date:
-                cursor.execute("UPDATE project SET completion_date = %s WHERE project_id = %s", (new_completion_date, project_id))
+                new_status = 1  # Completed
+            else:
+                new_status = 0  # In Progress
+
+            cursor.execute("UPDATE project SET completion_date = %s, status = %s WHERE project_id = %s", (date_to_update, new_status, project_id))
 
             conn.commit()
             flash('Project updated successfully!', 'success')
-            return redirect(url_for('edit_project', project_id=project_id))
+            return redirect(url_for('project_detail', project_id=project_id))
 
         except mysql.connector.Error as err:
             conn.rollback()
             flash(f'Error updating project: {err}', 'danger')
+            # On error, fall through to re-render the form
         
         finally:
             cursor.close()
             conn.close()
 
-    cursor.execute("SELECT * FROM asset WHERE project_id = %s ORDER BY date_uploaded DESC", (project_id,))
-    assets = cursor.fetchall()
-    cursor.execute("SELECT f.*, u.first_name FROM feedback f JOIN user u ON f.user_id = u.user_id WHERE f.project_id = %s ORDER BY f.date DESC", (project_id,))
-    feedback = cursor.fetchall()
-    cursor.execute("SELECT client_id, client_name FROM client")
-    clients = cursor.fetchall()
+    # --- THIS IS THE GET REQUEST PART ---
+    # This part runs for a GET request, or if a POST request fails
+    # We need a new connection if the POST block closed it
+    if 'conn' not in locals() or not conn.is_connected():
+        conn = get_db_connection()
+        if conn is None:
+            flash("Database connection failed.", "danger")
+            return redirect(url_for('projects_list'))
+            
+    cursor = conn.cursor(dictionary=True)
     
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute("SELECT * FROM asset WHERE project_id = %s ORDER BY date_uploaded DESC", (project_id,))
+        assets = cursor.fetchall()
+        cursor.execute("SELECT f.*, u.first_name FROM feedback f JOIN user u ON f.user_id = u.user_id WHERE f.project_id = %s ORDER BY f.date DESC", (project_id,))
+        feedback = cursor.fetchall()
+        cursor.execute("SELECT client_id, client_name FROM client")
+        clients = cursor.fetchall()
+        
+        return render_template('edit_project.html', project=project, assets=assets, feedback=feedback, clients=clients)
 
-    return render_template('edit_project.html', project=project, assets=assets, feedback=feedback, clients=clients)
+    except mysql.connector.Error as err:
+        print(f"Error fetching edit data: {err}")
+        flash("Failed to load project data for editing.", "danger")
+        return redirect(url_for('projects_list'))
+    
+    finally:
+        if 'cursor' in locals() and cursor:
+            cursor.close()
+        if 'conn' in locals() and conn:
+            conn.close()
 
 
 @app.route('/dashboard')
@@ -381,17 +428,13 @@ def dashboard():
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute("SELECT COUNT(*) AS total_projects FROM project p JOIN project_user pu ON p.project_id = pu.project_id WHERE pu.user_id = %s", (g.user['user_id'],))
         total_projects_result = cursor.fetchone()
         dashboard_data['total_projects_count'] = total_projects_result['total_projects']
 
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute("SELECT COUNT(*) AS completed_projects FROM project p JOIN project_user pu ON p.project_id = pu.project_id WHERE pu.user_id = %s AND p.status = 1", (g.user['user_id'],))
         completed_projects_result = cursor.fetchone()
         dashboard_data['completed_projects_count'] = completed_projects_result['completed_projects']
-
-        # CORRECTED: All queries below now filter by current user and use g.user['user_id']
         
         q1_query = """
             SELECT c.client_name AS Client, c.industry AS Industry, SUM(p.total_hours_spent) AS Total_Hours_Across_Projects, COUNT(p.project_id) AS Number_of_Projects
@@ -400,7 +443,6 @@ def dashboard():
             WHERE pu.user_id = %s
             GROUP BY c.client_name, c.industry ORDER BY Total_Hours_Across_Projects DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q1_query, (g.user['user_id'],))
         dashboard_data['client_summary'] = cursor.fetchall()
 
@@ -411,7 +453,6 @@ def dashboard():
             WHERE pu.user_id = %s
             GROUP BY s.skill_name HAVING COUNT(ps.project_id) > 0 ORDER BY Projects_Used_In DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q3_query, (g.user['user_id'],))
         dashboard_data['top_skills'] = cursor.fetchall()
 
@@ -422,7 +463,6 @@ def dashboard():
             WHERE p.status = 0 AND pu.user_id = %s
             GROUP BY p.project_id, p.title
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q5_query, (g.user['user_id'],))
         dashboard_data['in_progress_assets'] = cursor.fetchall()
 
@@ -433,7 +473,6 @@ def dashboard():
             WHERE pu.user_id = %s
             GROUP BY s.skill_name ORDER BY Average_Proficiency_Rating DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q7_query, (g.user['user_id'],))
         dashboard_data['skill_proficiency'] = cursor.fetchall()
 
@@ -445,7 +484,6 @@ def dashboard():
             WHERE pu.user_id = %s
             GROUP BY u.user_id, Reviewer, u.role ORDER BY Total_Feedback_Given DESC LIMIT 1
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q8_query, (g.user['user_id'],))
         dashboard_data['top_reviewer'] = cursor.fetchone()
 
@@ -456,7 +494,6 @@ def dashboard():
             WHERE pu.user_id = %s AND p.total_hours_spent IS NOT NULL
             ORDER BY p.total_hours_spent DESC LIMIT 5
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q10_query, (g.user['user_id'],))
         dashboard_data['top_projects'] = cursor.fetchall()
 
@@ -466,7 +503,6 @@ def dashboard():
             WHERE u.user_id = %s
             GROUP BY u.role ORDER BY Total_Hours_Logged_By_Role DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q11_query, (g.user['user_id'],))
         dashboard_data['role_workload'] = cursor.fetchall()
 
@@ -477,7 +513,6 @@ def dashboard():
             WHERE pu.user_id = %s
             GROUP BY a.file_type ORDER BY Count_of_Files DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q13_query, (g.user['user_id'],))
         dashboard_data['file_types'] = cursor.fetchall()
 
@@ -487,7 +522,6 @@ def dashboard():
             WHERE p.project_id IN (SELECT project_id FROM project_user WHERE user_id = %s)
             GROUP BY p.title HAVING COUNT(pu.user_id) > 1 ORDER BY Number_of_Collaborators DESC
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q15_query, (g.user['user_id'],))
         dashboard_data['collaborative_projects'] = cursor.fetchall()
 
@@ -522,7 +556,6 @@ def projects_list():
             INNER JOIN project_user pu ON p.project_id = pu.project_id
             WHERE pu.user_id = %s
         """
-        # CORRECTED: Use dictionary access for g.user
         params = [g.user['user_id']]
         
         if industry_filter:
@@ -569,7 +602,6 @@ def project_detail(project_id):
     
     cursor = conn.cursor(dictionary=True)
 
-    # CORRECTED: Use dictionary access for g.user
     cursor.execute("SELECT project_id FROM project_user WHERE project_id = %s AND user_id = %s", (project_id, g.user['user_id']))
     if cursor.fetchone() is None:
         abort(403)
@@ -665,7 +697,6 @@ def analytics():
             INNER JOIN project_user pu ON p.project_id = pu.project_id
             WHERE pu.user_id = %s
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q4_query, (g.user['user_id'],))
         analytics_data['python_data_projects'] = cursor.fetchall()
 
@@ -675,7 +706,6 @@ def analytics():
             INNER JOIN project_user pu ON p.project_id = pu.project_id
             WHERE pu.user_id = %s AND a.asset_id IS NULL
         """
-        # CORRECTED: Use dictionary access for g.user
         cursor.execute(q9_query, (g.user['user_id'],))
         analytics_data['projects_without_assets'] = cursor.fetchall()
         
